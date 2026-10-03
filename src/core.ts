@@ -49,7 +49,7 @@ export function parseJob(short: string, json: string): JobRow | null {
   }
   if (raw === null || typeof raw !== 'object') return null
   const r = raw as Record<string, unknown>
-  const sessionId = str(r.sessionId)
+  const sessionId = str(r.resumeSessionId) ?? str(r.sessionId)
   if (!sessionId) return null
   return { short, sessionId, name: str(r.name), state: str(r.state), cwd: str(r.cwd) ?? '', updatedAt: toMs(r.updatedAt) }
 }

@@ -2,6 +2,12 @@
 
 All notable changes to Cyberine Session Switcher. Versions follow `version` in `.claude-plugin/plugin.json`.
 
+## [0.1.2] - 2026-10-03
+
+- A background session that ran `/clear` is one row again. Its job was keyed by the conversation from before `/clear`, so it showed as a second, dead row with the same name, `/switch <name>` found two sessions, and resuming that row loaded the old conversation in a new process.
+- The resume confirmation for a running background session says the session you are in moves to the background and keeps running.
+- README says what happens to the session you resume from: moved to the background when the target is live, swapped in place otherwise; and that sessions no longer listed are still reachable with `claude --resume`.
+
 ## [0.1.1] - 2026-10-03
 
 - The confirmation now takes the keyboard on its No button. Before, No on the confirmation that `/switch <query>` opens handed the keyboard back to the prompt.

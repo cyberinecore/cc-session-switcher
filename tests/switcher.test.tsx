@@ -174,12 +174,22 @@ describe('tmux and relay', () => {
     expect(planFor('stop', s, true).targets).toEqual([])
     expect(warningsFor('stop', s.filter(x => x.name === 'web-app_178')).join(' ')).toMatch(/breaks the handoff/)
   })
+  test('a job that ran /clear is one row under the conversation it continues', async () => {
+    const job = parseJob('99999999', JSON.stringify({ sessionId: '99999999-old', resumeSessionId: '77777777-new', name: 'api_4', state: 'working', cwd: '/w/api', updatedAt: 5 }))
+    expect(job?.sessionId).toBe('77777777-new')
+    expect(job?.short).toBe('99999999')
+    const agents = parseAgents(JSON.stringify([{ pid: 40, cwd: '/w/api', kind: 'background', startedAt: 1, sessionId: '77777777-new', name: 'api_4', status: 'idle' }]))
+    const merged = mergeSessions(agents, job ? [job] : [], SELF, new Map())
+    expect(merged.map(x => [x.name, x.sessionId, x.short, x.isLive, x.jobState])).toEqual([['api_4', '77777777-new', '99999999', true, 'working']])
+    expect(commandFor('stop', merged[0]!)).toEqual(['claude', 'stop', '99999999'])
+  })
+
   test('the resume note says a live background session is attached to, a live terminal one doubled', async () => {
     const s = sample()
     const bg = s.filter(x => x.name === 'web-app_178')
     const tty = s.filter(x => x.name === 'web-app_177')
     const done = s.filter(x => x.name === 'web-app_170')
-    expect(confirmNote('resume', 0, bg)).toMatch(/attaches to it/)
+    expect(confirmNote('resume', 0, bg)).toMatch(/attaches to it, and the session you are in moves to the background/)
     expect(confirmNote('resume', 0, tty)).toMatch(/both processes would then write/)
     expect(confirmNote('resume', 0, done)).toBe('It replaces this conversation here.')
   })

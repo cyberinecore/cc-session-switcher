@@ -48,7 +48,7 @@ function resumeNote(targets: SwitcherSession[]): string {
   const s = targets[0]
   const head = 'It replaces this conversation here.'
   if (!s?.isLive) return head
-  if (s.kind === 'background') return head + ' The background session keeps running: this session attaches to it, so every window on it shows and sends to the same conversation.'
+  if (s.kind === 'background') return head + ' The background session keeps running: this terminal attaches to it, and the session you are in moves to the background, still running, until you stop it.'
   return head + ' It is still open in another terminal; both processes would then write to the same conversation. Stop it first if that matters.'
 }
 

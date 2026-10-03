@@ -21,6 +21,8 @@ Settled decisions, each with the reason. Change one only together with the user 
 - D9. Delete on an interactive session ends it like Stop (user decision 2026-10-03); its transcript stays for `claude --resume`.
 - D10. Group stop and delete act only on background sessions that are not working, and skip the current session and unfinished relays, listing each skipped session with the reason. Ending a working or interactive session is a one-row decision.
 - D11. Resume uses Claude Code's own `/resume <id>` through `$.command.run`, not a reimplementation.
+- D18. The confirmation focuses No itself with `$.ui.focus` instead of relying on `autoFocus`, because `autoFocus` only acts when the pane takes the keyboard: without it the ring stayed on the vanished search field and No handed the keyboard back to the prompt. No returns the ring to its row; an action returns it to the row if still listed, else to the search field. Tab on the confirmation is redirected from the engine's close mark back to No.
+- D19. Resuming a running background session attaches to it, observed live on Claude Code 2.1.288: one process, every window showing the same conversation, the transcript one chain. Only a live interactive session in another terminal gets a second process, and only that case is warned as such.
 
 ## Layout
 

@@ -9,6 +9,8 @@ import { clip, confirmHeading, confirmNote, failureLine, hintLine, lastLine, ran
 const PANE = 'cc-session-switcher'
 const COMMAND = 'switch'
 const MAX_HOTKEYS = 9
+const CONFIRM_NO = 'cancel'
+const SEARCH = 'q'
 
 const sessionsRef = { plugin: 'cyberine-session-switcher', key: 'sessions' } as const
 const loadingRef = { plugin: 'cyberine-session-switcher', key: 'isLoading' } as const
@@ -132,6 +134,7 @@ async function openPane($: Engine): Promise<void> {
 async function ask($: Engine, action: SwitcherAction, scope: string, sessions: SwitcherSession[], isGroup: boolean, back: string | null): Promise<void> {
   const plan = planFor(action, sessions, isGroup)
   await go($, { screen: 'confirm', action, scope, ids: plan.targets.map(s => s.sessionId), skipped: plan.skipped, back })
+  await $.ui.focus({ requestId: PANE, key: CONFIRM_NO }).catch(() => undefined)
 }
 
 async function runCommand($: Engine, args: string): Promise<string> {
@@ -155,7 +158,7 @@ async function runCommand($: Engine, args: string): Promise<string> {
   return hits.length === 0 ? 'No session matches "' + query + '".' : hits.length + ' sessions match "' + query + '".'
 }
 
-async function execute($: Engine, action: SwitcherAction, ids: string[]): Promise<void> {
+async function execute($: Engine, action: SwitcherAction, ids: string[], back: string | null): Promise<void> {
   const all = (await $.state.get(sessionsRef)).value ?? []
   const targets = all.filter(s => ids.includes(s.sessionId))
   if (action === 'resume') {
@@ -186,7 +189,10 @@ async function execute($: Engine, action: SwitcherAction, ids: string[]): Promis
   $.ui.toast(clip(summary, 160))
   await $.state.set(noticeRef, summary)
   await go($, { screen: 'list' })
-  await refresh($)
+  const after = await refresh($)
+  const isKept = back !== null && after.some(s => back === 's:' + s.sessionId || back === 'g:' + s.project)
+  await $.state.set(focusedRef, isKept ? back : null)
+  await $.ui.focus({ requestId: PANE, key: isKept && back ? back : SEARCH }).catch(() => undefined)
 }
 
 type PaneEvent = RenderInput<'Pane', 'terminal' | 'desktop' | 'vscode'>
@@ -199,11 +205,12 @@ async function renderConfirm($: Engine, e: PaneEvent, screen: Extract<SwitcherSc
   const verb = verbOf(screen.action)
   const back = () => {
     void (async () => {
+      if (screen.back) await $.state.set(focusedRef, screen.back)
       await go($, { screen: 'list' })
       if (screen.back) await $.ui.focus({ requestId: PANE, key: screen.back }).catch(() => undefined)
     })()
   }
-  const yes = () => { void execute($, screen.action, screen.ids) }
+  const yes = () => { void execute($, screen.action, screen.ids, screen.back) }
   const shown = targets.slice(0, 8)
   const ram = targets.reduce((n, s) => n + s.rssKb, 0)
   return (
@@ -218,10 +225,10 @@ async function renderConfirm($: Engine, e: PaneEvent, screen: Extract<SwitcherSc
       {screen.skipped.length > 0 ? <Text key="skip-h" {...LOOK.warn}>{'Skipped ' + screen.skipped.length + ':'}</Text> : null}
       {screen.skipped.slice(0, 6).map((s, i) => <Text key={'k' + i} {...LOOK.meta} wrap="truncate-end">{'  ' + s}</Text>)}
       {warningsFor(screen.action, targets).slice(0, 6).map((w, i) => <Text key={'w' + i} {...LOOK.warn} wrap="truncate-end">{'! ' + w}</Text>)}
-      {targets.length > 0 ? <Text key="note" {...LOOK.meta} wrap="wrap">{confirmNote(screen.action, ram)}</Text> : null}
+      {targets.length > 0 ? <Text key="note" {...LOOK.meta} wrap="wrap">{confirmNote(screen.action, ram, targets)}</Text> : null}
       <Box key="acts" flexDirection="row" columnGap={2} marginTop={1}>
         {isBusyNow ? <Text key="busy" {...LOOK.warn}>Working...</Text> : null}
-        <Button plain key="cancel" autoFocus hotkey="n" role="dismiss" onPress={back}>No</Button>
+        <Button plain key={CONFIRM_NO} autoFocus hotkey="n" role="dismiss" onPress={back}>No</Button>
         {targets.length > 0 && !isBusyNow ? <Button plain key="confirm" hotkey="y" onPress={yes}>{'Yes, ' + verb.toLowerCase()}</Button> : null}
       </Box>
     </Box>
@@ -302,7 +309,7 @@ async function renderList($: Engine, e: PaneEvent) {
 
   return (
     <Box flexDirection="column" paddingRight={1}>
-      <Input key="q" label="Search " autoFocus placeholder="session name, number or id" value={query} submitLabel="resume top hit" onInput={setQuery} onSubmit={submitSearch} />
+      <Input key={SEARCH} label="Search " autoFocus placeholder="session name, number or id" value={query} submitLabel="resume top hit" onInput={setQuery} onSubmit={submitSearch} />
       {error ? <Text key="err" {...LOOK.error} wrap="wrap">{error}</Text> : null}
       <Box key="rows" flexDirection="column" paddingLeft={1}>
         {isLoading && all.length === 0 ? <Text key="loading" {...LOOK.meta}>Reading sessions...</Text> : null}
@@ -377,10 +384,9 @@ export const register: Register = on => {
 
   on('ui.focus', { component: 'Pane', requestId: PANE }, async ($, e, next) => {
     const key = e.element ?? ''
-    if (key.startsWith('g:') || key.startsWith('s:')) {
-      const screen = (await $.state.get(screenRef)).value
-      if (!screen || screen.screen === 'list') await $.state.set(focusedRef, key)
-    }
+    const screen = (await $.state.get(screenRef)).value
+    if (screen?.screen === 'confirm' && key === '') return next({ ...e, element: CONFIRM_NO })
+    if ((key.startsWith('g:') || key.startsWith('s:')) && (!screen || screen.screen === 'list')) await $.state.set(focusedRef, key)
     return next(e)
   })
 }

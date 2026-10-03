@@ -4,6 +4,7 @@ import type { On } from 'claude-code'
 
 import { commandFor, mergeSessions, parseAgents, parseJob, parsePanes, parseParents, planFor, projectOf, relaysFromListing, tmuxOf, visibleRows, warningsFor } from '../src/core'
 import type { JobRow } from '../src/core'
+import { confirmNote } from '../src/text'
 
 const PANE = 'cc-session-switcher'
 const SELF = 'cafe0000-0000-4000-8000-000000000000'
@@ -173,6 +174,25 @@ describe('tmux and relay', () => {
     expect(planFor('stop', s, true).targets).toEqual([])
     expect(warningsFor('stop', s.filter(x => x.name === 'web-app_178')).join(' ')).toMatch(/breaks the handoff/)
   })
+  test('the resume note says a live background session is attached to, a live terminal one doubled', async () => {
+    const s = sample()
+    const bg = s.filter(x => x.name === 'web-app_178')
+    const tty = s.filter(x => x.name === 'web-app_177')
+    const done = s.filter(x => x.name === 'web-app_170')
+    expect(confirmNote('resume', 0, bg)).toMatch(/attaches to it/)
+    expect(confirmNote('resume', 0, tty)).toMatch(/both processes would then write/)
+    expect(confirmNote('resume', 0, done)).toBe('It replaces this conversation here.')
+  })
+
+  test('the stop note promises /switch only for background sessions', async () => {
+    const s = sample()
+    const bg = s.filter(x => x.name === 'web-app_178')
+    const tty = s.filter(x => x.name === 'web-app_177')
+    expect(confirmNote('stop', 0, bg)).toMatch(/claude attach <id> or \/switch/)
+    expect(confirmNote('stop', 0, bg)).not.toMatch(/leaves this list/)
+    expect(confirmNote('stop', 0, tty)).toMatch(/leaves this list and comes back with claude --resume/)
+    expect(confirmNote('stop', 0, tty)).not.toMatch(/\/switch/)
+  })
 })
 
 describe('/switch pane', () => {
@@ -283,6 +303,26 @@ describe('/switch pane', () => {
     expect(w.resumed).toEqual([])
     await ui.press({ key: 'confirm' })
     expect(w.resumed).toEqual(['bbbbbbbb-2'])
+    await ui.unmount()
+  })
+
+  test('No on the /switch confirm returns to the row with its actions', async ($, on) => {
+    world(on)
+    await $.command.run(run('177'))
+    const ui = await mountPane($)
+    await ui.press({ key: 'cancel' })
+    expect(await buttonKeys(ui)).toEqual(expect.arrayContaining(['act-resume', 'act-stop', 'act-del']))
+    await ui.unmount()
+  })
+
+  test('after a stop the row keeps its actions', async ($, on) => {
+    world(on)
+    await $.command.run(run('177'))
+    const ui = await mountPane($)
+    await ui.press({ key: 'cancel' })
+    await ui.press({ key: 'act-stop' })
+    await ui.press({ key: 'confirm' })
+    expect(await buttonKeys(ui)).toContain('act-stop')
     await ui.unmount()
   })
 

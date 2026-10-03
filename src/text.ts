@@ -44,12 +44,27 @@ export function targetLine(s: SwitcherSession): string {
   return '  ' + (s.isLive ? LIVE : GONE) + ' ' + s.name + '  ' + bits.join(', ') + '  ' + s.short
 }
 
-export function confirmNote(action: SwitcherAction, ramKb: number): string {
+function resumeNote(targets: SwitcherSession[]): string {
+  const s = targets[0]
+  const head = 'It replaces this conversation here.'
+  if (!s?.isLive) return head
+  if (s.kind === 'background') return head + ' The background session keeps running: this session attaches to it, so every window on it shows and sends to the same conversation.'
+  return head + ' It is still open in another terminal; both processes would then write to the same conversation. Stop it first if that matters.'
+}
+
+function stopNote(targets: SwitcherSession[]): string {
+  const hasBg = targets.some(s => s.kind === 'background')
+  const hasTty = targets.some(s => s.kind === 'interactive')
+  const back = [hasBg ? 'a background session comes back with claude attach <id> or /switch' : '', hasTty ? 'an interactive one leaves this list and comes back with claude --resume' : ''].filter(Boolean).join('; ')
+  return 'Frees its memory. The conversation stays on disk: ' + back + '. A background session is stopped with claude stop; an interactive one in its own tmux session has that tmux session killed, any other gets SIGTERM.'
+}
+
+export function confirmNote(action: SwitcherAction, ramKb: number, targets: SwitcherSession[]): string {
   const base =
     action === 'resume'
-      ? 'It replaces this conversation here. The session is still open elsewhere if it is live; both processes would then hold the same conversation.'
+      ? resumeNote(targets)
       : action === 'stop'
-        ? 'Frees its memory. The conversation stays on disk: claude attach <id>, claude --resume or /switch resumes it. A background session is stopped with claude stop; an interactive one in its own tmux session has that tmux session killed, any other gets SIGTERM.'
+        ? stopNote(targets)
         : 'A background session goes through claude rm: off the list, plus its Claude-created worktree when that has no uncommitted changes. An interactive one is ended like Stop, its own tmux session killed. The transcript stays for claude --resume.'
   return ramKb > 0 && action !== 'resume' ? base + ' About ' + mb(ramKb) + ' resident now.' : base
 }

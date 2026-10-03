@@ -57,9 +57,9 @@ When the terminal is wide enough for Claude Code to dock panes beside the transc
 
 Every action opens a confirmation with No focused: `y` runs it, `n` goes back to the list, Esc closes the pane. The confirmation lists the sessions it will act on, the ones it skips with the reason, warnings, and the memory those sessions hold now.
 
-- Resume: runs Claude Code's own `/resume <session id>` in the current session, as if you typed it. The conversation you are in is replaced by the one you picked. When the picked session is still running elsewhere, both processes then hold the same conversation; the confirmation says so.
-- Stop on a background session: `claude stop <id>`. The conversation stays and `claude attach <id>` continues it.
-- Stop on an interactive session: when the session runs alone in a tmux session named after it (one window, one pane), that tmux session is killed with `tmux kill-session`, which also ends the shell around Claude. Any other interactive session gets `kill -TERM <pid>`, which ends Claude in that terminal and leaves the terminal and any tmux session around it alone.
+- Resume: runs Claude Code's own `/resume <session id>` in the current session, as if you typed it. The conversation you are in is replaced by the one you picked. When the picked session is a background session that is still running, it keeps running and this session attaches to it, like `claude attach`: every window on it shows and sends to the same conversation. When it is an interactive session still open in another terminal, both processes would write to the same conversation; the confirmation says so.
+- Stop on a background session: `claude stop <id>`. The conversation stays, the session stays in the list as done, and `claude attach <id>` or Resume continues it.
+- Stop on an interactive session: when the session runs alone in a tmux session named after it (one window, one pane), that tmux session is killed with `tmux kill-session`, which also ends the shell around Claude. Any other interactive session gets `kill -TERM <pid>`, which ends Claude in that terminal and leaves the terminal and any tmux session around it alone. A stopped interactive session leaves the list; `claude --resume` finds its conversation.
 - Delete on a background session: `claude rm <id>`, which takes it off Claude Code's list and removes a worktree Claude created for it when that worktree has no uncommitted changes; otherwise Claude Code keeps the worktree and prints its path, which the plugin shows.
 - Delete on an interactive session: ends it exactly like Stop. Its transcript stays on disk, so `claude --resume` finds it.
 - Stop or Delete on a project: acts only on its background sessions that are not working right now. It always skips the session you are in, interactive sessions, sessions that are working, and sessions in an unfinished relay (below), each listed with the reason. Do those one at a time on their own rows.
@@ -85,7 +85,7 @@ Warnings shown before you confirm:
 - It needs Claude Code's agent view: `claude agents --json` must print the session list. Where agent view is unavailable (the Claude Code docs name some Bedrock, Vertex AI and Foundry setups), the pane shows the command's error instead.
 - Background job state and the transcript file location are Claude Code internals with no published format. When a Claude Code release changes them, stopped background sessions or last-use times may go missing from the list; nothing breaks and nothing is written.
 - macOS and Linux. On Windows, `ps`, `kill` and `tmux` are absent, so memory figures and stopping interactive sessions do not work.
-- Resuming a session that is still running elsewhere leaves two processes on one conversation; stop it first if that matters.
+- Resuming an interactive session that is still open in another terminal leaves two processes on one conversation; stop it first if that matters. A running background session is attached to instead, one process with two windows.
 
 ## Troubleshooting
 

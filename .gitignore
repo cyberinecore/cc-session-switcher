@@ -1,0 +1,9 @@
+.claude-plugin/types/
+.local/
+node_modules/
+.DS_Store
+
+# Local Claude Code overrides (per-machine, not for VCS)
+.claude/settings.local.json
+
+.envrc

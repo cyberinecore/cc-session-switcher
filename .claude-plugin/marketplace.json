@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "cyberine-session-switcher",
+  "owner": {
+    "name": "Nia D Pham",
+    "email": "xinchao@nghia-pham.com"
+  },
+  "description": "Session tools for Claude Code: find, resume, stop and delete your sessions from one pane.",
+  "plugins": [
+    {
+      "name": "cyberine-session-switcher",
+      "source": "./",
+      "description": "Pane that lists every Claude Code session by project and resumes, stops or deletes them.",
+      "category": "productivity"
+    }
+  ]
+}

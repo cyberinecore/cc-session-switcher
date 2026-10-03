@@ -1,0 +1,4 @@
+{
+  "description": "Session switcher mod: the /switch command and its pane, which lists Claude Code sessions by project and resumes, stops or deletes them",
+  "modules": ["./register.tsx"]
+}

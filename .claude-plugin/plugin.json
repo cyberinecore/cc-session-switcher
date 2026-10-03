@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin.json",
+  "name": "cyberine-session-switcher",
+  "version": "0.1.0",
+  "description": "One pane for every Claude Code session on your machine: grouped by project, newest first, searchable by name. Resume a session in the current one, or stop or delete sessions and whole project groups to free memory, with a confirmation that names what each action will end.",
+  "author": {
+    "name": "Nia D Pham",
+    "email": "xinchao@nghia-pham.com"
+  },
+  "homepage": "https://github.com/cyberinecore/cc-session-switcher",
+  "repository": "https://github.com/cyberinecore/cc-session-switcher",
+  "privacyPolicyUrl": "https://github.com/cyberinecore/cc-session-switcher/blob/main/PRIVACY.md",
+  "license": "MIT",
+  "keywords": [
+    "sessions",
+    "switcher",
+    "resume",
+    "tmux",
+    "memory",
+    "productivity",
+    "mod"
+  ],
+  "displayName": "Cyberine Session Switcher",
+  "types": "./types/index.d.ts"
+}

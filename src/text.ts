@@ -13,6 +13,7 @@ export function rowParts(row: Row, width: number, now: number): { label: string;
     if (g.rssKb) bits.push(mb(g.rssKb))
     const when = ago(g.lastActiveMs, now)
     if (when) bits.push(when)
+    if (g.sessions.some(s => s.isSelf)) bits.push('(here)')
     const tail = bits.join(DOT)
     return { label: (row.isOpen ? OPEN : CLOSED) + fit(g.project, Math.max(8, width - tail.length - 6)), tail }
   }
@@ -79,15 +80,19 @@ export function summaryLine(action: SwitcherAction, done: number, total: number,
 }
 
 export function hintLine(sessions: number, live: number, ramKb: number, isLoading: boolean, notice: string): string {
-  let s = sessions + ' sessions, ' + live + ' live'
+  let s = countLine(sessions) + ', ' + live + ' live'
   if (ramKb) s += ', ' + mb(ramKb) + ' RAM'
   if (isLoading) s += ', refreshing'
   if (notice) s += '  ' + notice
   return s + '  Esc close · Tab move · Enter open · 1-9 pick · n/p page'
 }
 
+function countLine(count: number): string {
+  return count + (count === 1 ? ' session' : ' sessions')
+}
+
 export function listedLine(count: number): string {
-  return count + (count === 1 ? ' session' : ' sessions') + ' listed.'
+  return countLine(count) + ' listed.'
 }
 
 export function rangeLabel(start: number, budget: number, total: number): string {

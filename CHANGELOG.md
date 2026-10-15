@@ -2,6 +2,11 @@
 
 All notable changes to Cyberine Session Switcher. Versions follow `version` in `.claude-plugin/plugin.json`.
 
+## [0.1.4] - 2026-10-15
+
+- The project row of the session you are in ends with `(here)`, so it is easy to find while collapsed.
+- The hint under the list reads `1 session` for a single session.
+
 ## [0.1.3] - 2026-10-15
 
 - Session rows use the same ` · ` separator as project rows, and a project whose sessions are all running reads `2 live` instead of `2 · 2 live`.

@@ -2,6 +2,13 @@
 
 All notable changes to Cyberine Session Switcher. Versions follow `version` in `.claude-plugin/plugin.json`.
 
+## [0.1.3] - 2026-10-15
+
+- Session rows use the same ` · ` separator as project rows, and a project whose sessions are all running reads `2 live` instead of `2 · 2 live`.
+- The hint line under the list fits a docked pane: it no longer repeats the r, s and x keys that the actions line already shows per row.
+- `/switch` with no argument reports the same session count as the pane, without the session you are in, as `1 session` or `N sessions`.
+- Checked against Claude Code 2.1.300: validation and plugin tests pass with no change needed.
+
 ## [0.1.2] - 2026-10-03
 
 - A background session that ran `/clear` is one row again. Its job was keyed by the conversation from before `/clear`, so it showed as a second, dead row with the same name, `/switch <name>` found two sessions, and resuming that row loaded the old conversation in a new process.

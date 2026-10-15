@@ -4,7 +4,7 @@ import type { SwitcherAction, SwitcherScreen, SwitcherSession, SwitcherShow, Swi
 import { commandFor, isBusy, isJobDirName, matchSessions, mergeSessions, parseAgents, parseJob, parsePanes, parseParents, parseRss, planFor, projectRoot, relaysFromListing, rowKey, tmuxOf, transcriptPath, trimSlash, visibleRows, warningsFor } from '../src/core'
 import type { JobRow, RelayEntry, Row } from '../src/core'
 import { LOOK } from '../src/look'
-import { clip, confirmHeading, confirmNote, failureLine, hintLine, lastLine, rangeLabel, rowParts, summaryLine, targetLine, verbOf } from '../src/text'
+import { clip, confirmHeading, confirmNote, failureLine, hintLine, lastLine, listedLine, rangeLabel, rowParts, summaryLine, targetLine, verbOf } from '../src/text'
 
 const PANE = 'cc-session-switcher'
 const COMMAND = 'switch'
@@ -147,7 +147,7 @@ async function runCommand($: Engine, args: string): Promise<string> {
   const err = (await $.state.get(errorRef)).value ?? ''
   if (err) return err
   const query = args.trim()
-  if (query === '') return sessions.length + ' session(s) listed.'
+  if (query === '') return listedLine(sessions.filter(s => !s.isSelf).length)
   const hits = matchSessions(sessions, query)
   await $.state.set(queryRef, query)
   if (hits.length === 1) {

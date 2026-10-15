@@ -8,8 +8,8 @@ const DOT = ' · '
 export function rowParts(row: Row, width: number, now: number): { label: string; tail: string } {
   if (row.type === 'group') {
     const g = row.group
-    const bits = [String(g.sessions.length)]
-    if (g.live) bits.push(g.live + ' live')
+    const bits = g.live === g.sessions.length ? [g.live + ' live'] : [String(g.sessions.length)]
+    if (g.live && g.live < g.sessions.length) bits.push(g.live + ' live')
     if (g.rssKb) bits.push(mb(g.rssKb))
     const when = ago(g.lastActiveMs, now)
     if (when) bits.push(when)
@@ -18,12 +18,12 @@ export function rowParts(row: Row, width: number, now: number): { label: string;
   }
   const s = row.session
   const kind = s.kind === 'interactive' ? (s.tmux ? 'tmux' : 'tty') : 'bg'
-  const bits = [(s.relay ? 'relay ' : '') + kind, stateLabel(s)]
+  const bits = [(s.relay ? 'relay ' : '') + kind + ' ' + stateLabel(s)]
   if (s.rssKb) bits.push(mb(s.rssKb))
   const when = ago(s.lastActiveMs, now)
   if (when) bits.push(when)
   if (s.isSelf) bits.push('(here)')
-  const tail = bits.join(' ')
+  const tail = bits.join(DOT)
   return { label: '  ' + (s.isLive ? LIVE : GONE) + ' ' + fit(s.name, Math.max(8, width - tail.length - 10)), tail }
 }
 
@@ -83,7 +83,11 @@ export function hintLine(sessions: number, live: number, ramKb: number, isLoadin
   if (ramKb) s += ', ' + mb(ramKb) + ' RAM'
   if (isLoading) s += ', refreshing'
   if (notice) s += '  ' + notice
-  return s + '  Esc close  Tab move  Enter open/resume  on a row: 1-9 pick, r resume, s stop, x delete, n/p page'
+  return s + '  Esc close · Tab move · Enter open · 1-9 pick · n/p page'
+}
+
+export function listedLine(count: number): string {
+  return count + (count === 1 ? ' session' : ' sessions') + ' listed.'
 }
 
 export function rangeLabel(start: number, budget: number, total: number): string {

@@ -209,7 +209,7 @@ describe('/switch pane', () => {
   test('lists projects collapsed, with sessions hidden until a group opens', async ($, on) => {
     world(on)
     const out = await $.command.run(run(''))
-    expect(out.text).toMatch(/session\(s\) listed/)
+    expect(out.text).toMatch(/^\d+ sessions? listed\.$/)
     const ui = await mountPane($)
     const keys = (await ui.findAll({ type: 'Button' })).map(b => b.key ?? '')
     expect(keys.filter(k => k.startsWith('g:'))).toEqual(['g:web-app', 'g:worker'])
